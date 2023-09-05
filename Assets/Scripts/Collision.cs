@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using TMPro;
-using System.Linq.Expressions;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -163,8 +161,8 @@ public class Collision : MonoBehaviour
             compareDistance = ball.transform.position;
             GetDistance();
 
-            DistanceText.text = Distance.ToSafeString();
-            VelocityText.text = Velocity.ToSafeString();
+            DistanceText.text = Distance.ToString();
+            VelocityText.text = Velocity.ToString();
             float AOfCombTris;
             AOfCombTris = GetAreaOfTriangle(IntersectionPoint, point1, point2) + GetAreaOfTriangle(IntersectionPoint, point2, point3) + GetAreaOfTriangle(IntersectionPoint, point1, point3);
             if (AOfCombTris >= TriangleArea - CollisionCushionRange && AOfCombTris <= TriangleArea + CollisionCushionRange && T0 <= 1 && T0 > 0)
@@ -175,9 +173,9 @@ public class Collision : MonoBehaviour
             {
                 TriangleMaterial.color = Color.blue;
             }
-            T0Text.text = T0.ToSafeString();
-            T1Text.text = T1.ToSafeString();
-            IntersectionPointText.text = IntersectionPoint.ToSafeString();
+            T0Text.text = T0.ToString();
+            T1Text.text = T1.ToString();
+            IntersectionPointText.text = IntersectionPoint.ToString();
         }
     }
     public Mesh CreateMesh(Vector3 p1, Vector3 p2, Vector3 p3)
@@ -282,6 +280,7 @@ public class Collision : MonoBehaviour
         return Mathf.Abs(Output);
     }
 }
+#if UNITY_EDITOR
 [CustomEditor(typeof(Collision))]
 public class ButtonEditor : Editor
 {
@@ -324,4 +323,4 @@ public class ButtonEditor : Editor
         }
     }
 }
- 
+#endif
