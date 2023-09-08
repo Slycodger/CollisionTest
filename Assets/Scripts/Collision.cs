@@ -46,11 +46,23 @@ public class Collision : MonoBehaviour
     bool pressed;
     bool playingThrough = false;
     public float playDuration;
+    public float TVertex;
+    public float TEdge;
+    private Vector3[] Vertices = new Vector3[3];
+    private Vector3[] Edges = new Vector3[3];
+    private bool VertexCollision;
+    private bool EdgeCollision;
     public void Start()
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         TriangleArea = GetAreaOfTriangle(point1, point2, point3);
+        Vertices[0] = point1;
+        Vertices[1] = point2;
+        Vertices[2] = point3;
+        Edges[0] = point3 - point1;
+        Edges[1] = point2 - point1;
+        Edges[2] = point2 - point3;
     }
     public void Update()
     {
@@ -165,9 +177,74 @@ public class Collision : MonoBehaviour
             VelocityText.text = Velocity.ToString();
             float AOfCombTris;
             AOfCombTris = GetAreaOfTriangle(IntersectionPoint, point1, point2) + GetAreaOfTriangle(IntersectionPoint, point2, point3) + GetAreaOfTriangle(IntersectionPoint, point1, point3);
-            if (AOfCombTris >= TriangleArea - CollisionCushionRange && AOfCombTris <= TriangleArea + CollisionCushionRange && T0 <= 1 && T0 > 0)
+            if((T0 <= 1 && T0 > 0) || (T1 <= 1 && T1 >0)) 
             {
-                TriangleMaterial.color = Color.red;
+                if (AOfCombTris >= TriangleArea - CollisionCushionRange && AOfCombTris <= TriangleArea + CollisionCushionRange)
+                {
+                    TriangleMaterial.color = Color.red;
+                }
+                else
+                {
+                    VertexCollision = false;
+                    EdgeCollision = false;
+                    for(int i = 0; i < 3; i++)
+                    {
+                        float[] temp = new float[2];
+                        temp = QuadraticEquation(DotProduct(Velocity, Velocity), 2 * DotProduct(Velocity, BallPos - Vertices[i]), Mathf.Pow(Magnitude(Vertices[i] - BallPos), 2) - 1);
+                        float Smaller = 0;
+                        if (temp[0] <= temp[1])
+                        {
+                            Smaller = temp[0];
+                        }
+                        else
+                        {
+                            Smaller = temp[1];
+                        }
+                        if(Smaller <= 1 && Smaller > 0)
+                        {
+                            TVertex = Smaller; 
+                            VertexCollision = true;
+                        }
+                    }
+                    for (int i = 0; i < 3; i++)
+                    {
+                        Vector3 PointToVert = new Vector3();
+                        if (i != 2)
+                        {
+                            PointToVert = point1 - BallPos;
+                        }
+                        else
+                        {
+                            PointToVert = point3 - BallPos;
+                        }
+                        float[] temp = new float[2];
+                        temp = QuadraticEquation(Mathf.Pow(Magnitude(Edges[i]), 2) * -Mathf.Pow(Magnitude(Velocity), 2) + Mathf.Pow(DotProduct(Edges[i], Velocity), 2), Mathf.Pow(Magnitude(Edges[i]), 2) * 2 * DotProduct(Velocity, PointToVert) - 2 * DotProduct(Edges[i], Velocity) * DotProduct(Edges[i], PointToVert), Mathf.Pow(Magnitude(Edges[i]), 2) * (1 - Mathf.Pow(Magnitude(PointToVert), 2)) + Mathf.Pow(DotProduct(Edges[i], PointToVert), 2));
+                        float Smallest;
+                        if (temp[0] <= temp[1])
+                        {
+                            Smallest = temp[0];
+                        }
+                        else
+                        {
+                            Smallest = temp[1];
+                        }
+                        float F0 = ((DotProduct(Edges[i], Velocity) * Smallest) - DotProduct(Edges[i], PointToVert)) / Mathf.Pow(Magnitude(Edges[i]), 2);
+                        if((F0 <= 1 && F0 > 0) && (Smallest <= 1 && Smallest > 0))
+                        {
+                            TEdge = Smallest;
+                            EdgeCollision = true;
+                        }
+                    }
+                    if (VertexCollision || EdgeCollision)
+                    {
+                        
+                        TriangleMaterial.color = Color.red;
+                    }
+                    else
+                    {
+                        TriangleMaterial.color = Color.blue;
+                    }
+                }
             }
             else
             {
@@ -212,6 +289,17 @@ public class Collision : MonoBehaviour
         Output.x = (Vec1.y * Vec2.z) - (Vec2.y * Vec1.z);
         Output.y = -((Vec1.x * Vec2.z) - (Vec2.x * Vec1.z));
         Output.z = (Vec1.x * Vec2.y) - (Vec2.x * Vec1.y);
+
+        return Output;
+    }
+    public float[] QuadraticEquation(float A, float B, float C)
+    {
+        float[] Output = new float[2];
+
+        float Sqrt = Mathf.Sqrt(Mathf.Pow(B,2) - 4*A*C);
+
+        Output[0] = (-B + Sqrt) / (2 * A);
+        Output[1] = (-B - Sqrt) / (2 * A);
 
         return Output;
     }
